@@ -15,9 +15,7 @@
 	<meta name="theme-color" content="#ffffff" id="themeColorMeta">
 	<title>イケフェス大阪2026 MAP</title>
 
-	<!-- Leaflet（CARTO版で使用） -->
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-		integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+	<!-- Leaflet の CSS/JS は CARTO版選択時のみ map-carto.js が動的に読み込む -->
 
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,18 +127,14 @@
 		</div>
 	</div>
 
-	<!-- Leaflet 本体（CARTO版で使用） -->
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-	<!-- ▼ 設定（MAP_PROVIDER の切替はここ） -->
+	<!-- ▼ ローカルスクリプト（従来どおり同期・固定順で読み込む）
+	     - config.js    : MAP_PROVIDER などの設定
+	     - map-carto.js : CARTO版のみ有効化。Leaflet CSS/JS は MapAdapter.init() 内で動的ロード
+	     - map-google.js: Google版のみ有効化。Google Maps API を init() 内で動的ロード
+	     - app.js       : 共通ロジック（window.MapAdapter を参照するため最後） -->
 	<script src="config.js"></script>
-
-	<!-- ▼ 地図アダプタ（config の指定に応じて片方だけが有効化される） -->
 	<script src="map-carto.js"></script>
 	<script src="map-google.js"></script>
-
-	<!-- ▼ 共通ロジック（両版共有） -->
 	<script src="app.js"></script>
 </body>
 
