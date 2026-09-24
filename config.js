@@ -11,7 +11,7 @@
  * ========================================================================= */
 window.APP_CONFIG = {
   // ▼▼▼ 通常はこの1行を 'carto' か 'google' に変えるだけ ▼▼▼
-  MAP_PROVIDER: ' carto',
+  MAP_PROVIDER: 'carto',
 
   // CARTO Basemaps はラスタータイルにAPIキーが必須（?key= で付与）
   CARTO_API_KEY: 'cb1_2rcy_1_3673d2ee2e8b7013c29c99aa',
