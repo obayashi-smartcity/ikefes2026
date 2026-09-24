@@ -25,7 +25,15 @@
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e5eef5' }] }
   ];
 
-  // Google Maps JS API を動的ロード
+  /* Google Maps JS API を動的ロード
+   * -----------------------------------------------------------------------
+   * Google 側のコールバックも script.onerror も発生しないケース
+   * （通信断・プロキシによる遮断・応答が返らない等）では Promise が永久に
+   * 未解決となり、画面が "Loading…" のまま固まる。
+   * → タイムアウトを設け、一定時間で必ず reject して
+   *   app.js 側の catch（エラーメッセージ表示）へ確実に到達させる。 */
+  const GMAPS_TIMEOUT_MS = Number(CFG.GOOGLE_MAPS_TIMEOUT_MS) > 0 ?
+    Number(CFG.GOOGLE_MAPS_TIMEOUT_MS) : 15000;
   function loadGoogleMaps() {
     return new Promise((resolve, reject) => {
       if (window.google && window.google.maps) { resolve(); return; }
@@ -35,12 +43,33 @@
         return;
       }
       const cbName = '__gmapsCb_' + Date.now();
-      window[cbName] = () => { resolve(); try { delete window[cbName]; } catch (e) {} };
+      let settled = false;   // resolve / reject を一度だけにする
+      let timerId = null;
+      // 後片付け：タイマー解除とグローバルコールバックの削除
+      function cleanup() {
+        if (timerId !== null) { clearTimeout(timerId); timerId = null; }
+        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+      }
+      // err を渡せば reject、省略すれば resolve。二重発火は無視する
+      function done(err) {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (err) reject(err); else resolve();
+      }
+      window[cbName] = () => done();
       const s = document.createElement('script');
       s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) +
         '&loading=async&callback=' + cbName + '&language=ja&region=JP';
       s.async = true; s.defer = true;
-      s.onerror = () => reject(new Error('Google Maps スクリプトの読み込みに失敗'));
+      s.onerror = () => done(new Error('Google Maps スクリプトの読み込みに失敗'));
+      // コールバックも onerror も発生しない場合の保険
+      timerId = setTimeout(() => {
+        // 稀に callback 未発火でも API 本体が利用可能になっている場合があるため最終確認
+        if (window.google && window.google.maps) { done(); return; }
+        done(new Error('Google Maps の読み込みがタイムアウトしました（' +
+          GMAPS_TIMEOUT_MS + 'ms）。通信環境をご確認ください'));
+      }, GMAPS_TIMEOUT_MS);
       document.head.appendChild(s);
     });
   }

@@ -20,6 +20,18 @@ window.APP_CONFIG = {
   // ※未設定のままだと Google 版は地図が表示されません
   GOOGLE_MAPS_API_KEY: 'AIzaSyAFpPT5t7YU9WLD7FhTgqaVokdE8A5cu-w',
 
+  /* Google Maps API の読み込みタイムアウト（ミリ秒）※Google版のみ参照
+  * コールバックも onerror も発生しない状況（通信断・プロキシ遮断・無応答）で
+  * 画面が "Loading…" のまま固まるのを防ぐ上限時間。経過後はエラー表示に切替。 */
+  GOOGLE_MAPS_TIMEOUT_MS: 15000,
+
+  /* Leaflet（CSS/JS）の読み込みタイムアウト（ミリ秒）※CARTO版のみ参照
+   * map-carto.js が MapAdapter.init() 内で CDN から Leaflet を動的ロードする際の上限時間。
+   * onload も onerror も発生しない状況（通信断・プロキシ遮断・無応答）で
+   * 画面が "Loading…" のまま固まるのを防ぐ。経過後はエラー表示に切替。
+   * 未定義の場合は 15000ms にフォールバックする。 */
+  LEAFLET_TIMEOUT_MS: 15000,
+
   // 初期表示（中心・ズーム）※両プロバイダ共通
   INITIAL_CENTER: { lat: 34.6937, lng: 135.5023 },
   INITIAL_ZOOM: 14,
