@@ -32,7 +32,7 @@ window.APP_CONFIG = {
    * false … pois.json のカテゴリ定義をそのまま使う（元の挙動）
    * ======================================================================= */
   SINGLE_CATEGORY: {
-    ENABLED: true,
+    ENABLED: false,
     ID: 'MC01000001',
     NAME: '建築',
     COLOR: '#F2A172'   // ← 建築の色。変えたい場合はこの1行だけ変更
