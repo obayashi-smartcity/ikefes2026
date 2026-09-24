@@ -15,9 +15,7 @@
 	<meta name="theme-color" content="#ffffff" id="themeColorMeta">
 	<title>イケフェス大阪2026 MAP</title>
 
-	<!-- Leaflet（CARTO版で使用） -->
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-		integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+	<!-- Leaflet の CSS は CARTO版選択時のみ body 末尾のローダーが動的に読み込む -->
 
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,19 +127,63 @@
 		</div>
 	</div>
 
-	<!-- Leaflet 本体（CARTO版で使用） -->
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-	<!-- ▼ 設定（MAP_PROVIDER の切替はここ） -->
+	<!-- ▼ 設定（MAP_PROVIDER の切替はここ）: これだけ同期で先に読む -->
 	<script src="config.js"></script>
 
-	<!-- ▼ 地図アダプタ（config の指定に応じて片方だけが有効化される） -->
-	<script src="map-carto.js"></script>
-	<script src="map-google.js"></script>
+	<!-- ▼ 依存スクリプトの動的ロード
+	     - Google版: Leaflet を一切読み込まない（CSS/JS ともリクエストしない）
+	     - CARTO版 : Leaflet の CSS/JS を読み込み、完了後に map-carto.js を初期化
+	     読み込み順は必ず 地図アダプタ → app.js（app.js が window.MapAdapter を参照するため） -->
+	<script>
+	(function () {
+		var LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+		var LEAFLET_CSS_SRI = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+		var LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+		var LEAFLET_JS_SRI = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
 
-	<!-- ▼ 共通ロジック（両版共有） -->
-	<script src="app.js"></script>
+		function loadCSS(href, integrity) {
+			var l = document.createElement('link');
+			l.rel = 'stylesheet';
+			l.href = href;
+			l.integrity = integrity;
+			l.crossOrigin = '';
+			document.head.appendChild(l);
+		}
+
+		function loadJS(src, integrity) {
+			return new Promise(function (resolve, reject) {
+				var s = document.createElement('script');
+				s.src = src;
+				s.async = false; // 挿入順どおりに実行させる
+				if (integrity) { s.integrity = integrity; s.crossOrigin = ''; }
+				s.onload = resolve;
+				s.onerror = function () { reject(new Error('load failed: ' + src)); };
+				document.body.appendChild(s);
+			});
+		}
+
+		// 既定値は各アダプタ（map-carto.js / map-google.js）と同じく 'carto'
+		var provider = String((window.APP_CONFIG || {}).MAP_PROVIDER || 'carto').toLowerCase();
+		var chain = Promise.resolve();
+
+		if (provider === 'google') {
+			chain = chain.then(function () { return loadJS('map-google.js'); });
+		} else {
+			loadCSS(LEAFLET_CSS, LEAFLET_CSS_SRI);
+			chain = chain
+				.then(function () { return loadJS(LEAFLET_JS, LEAFLET_JS_SRI); })
+				.then(function () { return loadJS('map-carto.js'); });
+		}
+
+		chain
+			.then(function () { return loadJS('app.js'); })
+			.catch(function (e) {
+				console.error(e);
+				var el = document.getElementById('loading');
+				if (el) el.textContent = 'Error: スクリプトの読み込みに失敗しました';
+			});
+	})();
+	</script>
 </body>
 
 </html>
