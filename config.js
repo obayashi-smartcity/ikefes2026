@@ -14,7 +14,7 @@ window.APP_CONFIG = {
   MAP_PROVIDER: 'carto',
 
   // CARTO Basemaps はラスタータイルにAPIキーが必須（?key= で付与）
-  CARTO_API_KEY: 'cb1_2rcy_1_3673d2ee2e8b7013c29c99aa',
+  CARTO_API_KEY: 'cb1_3mnu_1_9357092faaed80e557d7e696',
 
   // Google Maps JavaScript API のキー（Google Cloud で発行）
   // ※未設定のままだと Google 版は地図が表示されません
